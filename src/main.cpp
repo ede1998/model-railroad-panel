@@ -5,17 +5,21 @@
  * then off for one second, repeatedly.
  */
 #include "Arduino.h"
-#include <pthread.h>
 #include <ESP8266WiFi.h> //https://github.com/esp8266/Arduino
 
 //needed for library
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h> //https://github.com/tzapu/WiFiManager
+#include <string>
 #include "BasicIo.h"
+#include "PiConnection.h"
 
 // Set LED_BUILTIN if it is not defined by Arduino framework
 // #define LED_BUILTIN 13
+
+PiConnection pi;
+BasicIo io(pi);
 
 void setup()
 {
@@ -44,9 +48,10 @@ void setup()
   //if you get here you have connected to the WiFi
   Serial.println("connected...yeey :)");
 
-  PiConnection pi;
-  pi.connect(IPAddress(192, 168, 140, 80), 8888);
-  pi.connect();
+  auto connection_result = pi.connect(IPAddress(192, 168, 140, 80));
+  Serial.printf("Connection result = %d\n", connection_result);
+  auto result = io.set_mode(17, GpioMode::PI_OUTPUT);
+  Serial.printf("Set mode result = %d\n", static_cast<int>(result));
 }
 
 void loop()
@@ -54,13 +59,17 @@ void loop()
   for (auto delay_duration = 1000;; delay_duration += 1000)
   {
     // turn the LED on (HIGH is the voltage level)
-    digitalWrite(LED_BUILTIN, HIGH);
+    // digitalWrite(LED_BUILTIN, HIGH);
+    auto result = io.gpio_write(17, GpioLevel::PI_ON);
+    Serial.printf("gpio write result = %d\n", static_cast<int>(result));
 
     // wait for a second
     delay(delay_duration);
 
     // turn the LED off by making the voltage LOW
-    digitalWrite(LED_BUILTIN, LOW);
+    //digitalWrite(LED_BUILTIN, LOW);
+    auto result1 = io.gpio_write(17, GpioLevel::PI_OFF);
+    Serial.printf("gpio write result = %d\n", static_cast<int>(result1));
 
     // wait for a second
     delay(delay_duration);
