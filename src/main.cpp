@@ -12,7 +12,7 @@
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h> //https://github.com/tzapu/WiFiManager
-#include <pigpio/pigpiod_if2.h>
+#include "BasicIo.h"
 
 // Set LED_BUILTIN if it is not defined by Arduino framework
 // #define LED_BUILTIN 13
@@ -44,7 +44,9 @@ void setup()
   //if you get here you have connected to the WiFi
   Serial.println("connected...yeey :)");
 
-  auto pi = pigpio_start("192.168.140.80", nullptr);
+  PiConnection pi;
+  pi.connect(IPAddress(192, 168, 140, 80), 8888);
+  pi.connect();
 }
 
 void loop()
