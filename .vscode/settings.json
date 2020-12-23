@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "*.tcc": "cpp",
+        "cmath": "cpp",
+        "functional": "cpp",
+        "random": "cpp",
+        "string": "cpp",
+        "limits": "cpp",
+        "set": "cpp",
+        "cstdint": "cpp",
+        "chrono": "cpp",
+        "type_traits": "cpp",
+        "thread": "cpp"
+    }
+}
