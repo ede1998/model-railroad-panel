@@ -1,0 +1,3 @@
+[submodule "lib/pigpio-remote"]
+	path = lib/pigpio-remote
+	url = https://github.com/ede1998/pigpio-remote

@@ -12,8 +12,8 @@
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h> //https://github.com/tzapu/WiFiManager
 #include <string>
-#include "BasicIo.h"
-#include "PiConnection.h"
+#include "pigpio-remote/BasicIo.h"
+#include "pigpio-remote/PiConnection.h"
 
 // Set LED_BUILTIN if it is not defined by Arduino framework
 // #define LED_BUILTIN 13
@@ -48,7 +48,7 @@ void setup()
   //if you get here you have connected to the WiFi
   Serial.println("connected...yeey :)");
 
-  auto connection_result = pi.connect(IPAddress(192, 168, 140, 80));
+  auto connection_result = pi.connect("192.168.140.80");
   Serial.printf("Connection result = %d\n", connection_result);
   auto result = io.set_mode(17, GpioMode::PI_OUTPUT);
   Serial.printf("Set mode result = %d\n", static_cast<int>(result));
