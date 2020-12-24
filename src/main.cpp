@@ -18,8 +18,8 @@
 // Set LED_BUILTIN if it is not defined by Arduino framework
 // #define LED_BUILTIN 13
 
-PiConnection pi;
-BasicIo io(pi);
+pigpio_remote::PiConnection pi;
+pigpio_remote::BasicIo io(pi);
 
 void setup()
 {
@@ -48,9 +48,9 @@ void setup()
   //if you get here you have connected to the WiFi
   Serial.println("connected...yeey :)");
 
-  auto connection_result = pi.connect("192.168.140.80");
+  auto connection_result = pi.Connect("192.168.140.80");
   Serial.printf("Connection result = %d\n", connection_result);
-  auto result = io.set_mode(17, GpioMode::PI_OUTPUT);
+  auto result = io.SetMode(17, pigpio_remote::GpioMode::PI_OUTPUT);
   Serial.printf("Set mode result = %d\n", static_cast<int>(result));
 }
 
@@ -60,7 +60,7 @@ void loop()
   {
     // turn the LED on (HIGH is the voltage level)
     // digitalWrite(LED_BUILTIN, HIGH);
-    auto result = io.gpio_write(17, GpioLevel::PI_ON);
+    auto result = io.Write(17, pigpio_remote::GpioLevel::PI_ON);
     Serial.printf("gpio write result = %d\n", static_cast<int>(result));
 
     // wait for a second
@@ -68,7 +68,7 @@ void loop()
 
     // turn the LED off by making the voltage LOW
     //digitalWrite(LED_BUILTIN, LOW);
-    auto result1 = io.gpio_write(17, GpioLevel::PI_OFF);
+    auto result1 = io.Write(17, pigpio_remote::GpioLevel::PI_OFF);
     Serial.printf("gpio write result = %d\n", static_cast<int>(result1));
 
     // wait for a second
