@@ -10,7 +10,8 @@
         "cstdint": "cpp",
         "chrono": "cpp",
         "type_traits": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "tuple": "cpp"
     },
     "cmake.configureOnOpen": false
 }

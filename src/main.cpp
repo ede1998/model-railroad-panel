@@ -14,68 +14,69 @@
 #include <string>
 #include "pigpio-remote/BasicIo.h"
 #include "pigpio-remote/PiConnection.h"
+#include <Adafruit_I2CDevice.h>
 
-// Set LED_BUILTIN if it is not defined by Arduino framework
-// #define LED_BUILTIN 13
-
-pigpio_remote::PiConnection pi;
-pigpio_remote::BasicIo io(pi);
+Adafruit_I2CDevice i2c_dev = Adafruit_I2CDevice(0x21);
+Adafruit_I2CDevice i2c_dev_20 = Adafruit_I2CDevice(0x20);
 
 void setup()
 {
-  // initialize LED digital pin as an output.
-  pinMode(LED_BUILTIN, OUTPUT);
-  // put your setup code here, to run once:
   Serial.begin(115200);
 
-  //WiFiManager
-  //Local intialization. Once its business is done, there is no need to keep it around
   WiFiManager wifiManager;
-  //reset saved settings
-  //wifiManager.resetSettings();
-
-  //set custom ip for portal
-  //wifiManager.setAPStaticIPConfig(IPAddress(10,0,1,1), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
-
-  //fetches ssid and pass from eeprom and tries to connect
-  //if it does not connect it starts an access point with the specified name
-  //here  "AutoConnectAP"
-  //and goes into a blocking loop awaiting configuration
   wifiManager.autoConnect("AutoConnectAP");
-  //or use this for auto generated name ESP + ChipID
-  //wifiManager.autoConnect();
-
-  //if you get here you have connected to the WiFi
   Serial.println("connected...yeey :)");
 
-  auto connection_result = pi.Connect("192.168.140.80");
-  Serial.printf("Connection result = %d\n", connection_result);
-  auto result = io.SetMode(17, pigpio_remote::GpioMode::PI_OUTPUT);
-  Serial.printf("Set mode result = %d\n", static_cast<int>(result));
+  if (!i2c_dev.begin())
+  {
+    Serial.print("Did not find device at 0x");
+    Serial.println(i2c_dev.address(), HEX);
+    while (1)
+      ;
+  }
+  Serial.print("Device found on address 0x");
+  Serial.println(i2c_dev.address(), HEX);
+
+  uint8_t buffer[32];
+  // Try to read 32 bytes
+  i2c_dev.read(buffer, 32);
+  Serial.print("Read: ");
+  for (uint8_t i = 0; i < 32; i++)
+  {
+    Serial.print("0x");
+    Serial.print(buffer[i], HEX);
+    Serial.print(", ");
+  }
+  Serial.println();
+
 }
+
+static uint8_t buffer = 0xFF;
 
 void loop()
 {
-  for (auto delay_duration = 1000;; delay_duration += 1000)
+  buffer ^= 0xFF;
+
+  if (i2c_dev.write(&buffer, 1))
   {
-    // turn the LED on (HIGH is the voltage level)
-    // digitalWrite(LED_BUILTIN, HIGH);
-    auto result = io.Write(17, pigpio_remote::GpioLevel::PI_ON);
-    Serial.printf("gpio write result = %d\n", static_cast<int>(result));
-
-    // wait for a second
-    delay(delay_duration);
-
-    // turn the LED off by making the voltage LOW
-    //digitalWrite(LED_BUILTIN, LOW);
-    auto result1 = io.Write(17, pigpio_remote::GpioLevel::PI_OFF);
-    Serial.printf("gpio write result = %d\n", static_cast<int>(result1));
-
-    // wait for a second
-    delay(delay_duration);
-    if (delay_duration >= 30000)
-    {
-      delay_duration = 1000;
-    }
+    Serial.printf("Write %d successful.", buffer);
   }
+  else
+  {
+    Serial.print("Error writing.");
+  }
+
+
+  i2c_dev.read(&buffer, 1);
+  Serial.print("Read 21: 0x");
+  Serial.print(buffer, HEX);
+  Serial.println();
+
+  uint8_t buffer2 = 0;
+  i2c_dev_20.read(&buffer2, 1);
+  Serial.print("Read 20: 0x");
+  Serial.print(buffer2, HEX);
+  Serial.println();
+
+  delay(200);
 }
