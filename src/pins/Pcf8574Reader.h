@@ -82,7 +82,9 @@ public:
         {
             Log.fatal("Did not find device at [%x].\n", this->_i2c_dev.address());
             while (true)
-                ;
+            {
+                delay(1000);
+            }
         }
         Log.notice("Device found at address [%x].\n", this->_i2c_dev.address());
     }

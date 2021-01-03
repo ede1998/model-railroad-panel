@@ -35,7 +35,7 @@ void setup()
 
   WiFiManager wifiManager;
   wifiManager.autoConnect("AutoConnectAP");
-  Log.notice("connected...yeey :)");
+  Log.notice("connected...yeey :).\n");
 
   layout = new Layout();
 }

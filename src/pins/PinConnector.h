@@ -7,20 +7,23 @@
 class OneToOnePinConnector : public Updater<Operation::Connect>
 {
 private:
-    ReadPin &_read;
-    WritePin &_write;
+    ReadPin *_read;
+    WritePin *_write;
 
 public:
-    OneToOnePinConnector(ReadPin &readPin, WritePin &writePin) : _read(readPin), _write(writePin)
+
+    void Wire(ReadPin &readPin, WritePin &writePin)
     {
-        Log.notice("Wired read pin [%s] to write pin [%s].\n", readPin.CName(), writePin.CName());
+        this->_read = &readPin;
+        this->_write = &writePin;
+        Log.trace("Wired read pin [%s] to write pin [%s].\n", readPin.CName(), writePin.CName());
         this->_name = "OneToOneConnector(" + readPin.Name() + "," + writePin.Name() + ")";
     }
 
     void Update() override
     {
-        auto value = this->_read.GetValue();
-        Log.verbose("Updating value [%T] from reader [%s] to writer [%s].\n", value, this->_read.CName(), this->_write.CName());
-        this->_write.SetValue(value);
+        auto value = this->_read->GetValue();
+        Log.verbose("Updating value [%T] from reader [%s] to writer [%s].\n", value, this->_read->CName(), this->_write->CName());
+        this->_write->SetValue(value);
     }
 };

@@ -6,45 +6,87 @@
 #include "pins/PinConnector.h"
 #include <vector>
 
+class Turnout
+{
+private:
+    ReadPin *_panel_switch;
+    ReadPin *_remote_feedback;
+    WritePin *_panel_led;
+    WritePin *_remote_motor;
+
+    // OneToOnePinConnector _feedback_connector;
+    OneToOnePinConnector _switch_connector;
+
+    int _turnout_number;
+
+public:
+    Turnout(int number) : _turnout_number(number) {}
+
+    inline void SetPanelSwitch(ReadPin &pin) { this->_panel_switch = &pin; }
+    inline void SetPanelLed(WritePin &pin) { this->_panel_led = &pin; }
+    inline void SetRemoteFeedback(ReadPin &pin) { this->_remote_feedback = &pin; }
+    inline void SetRemoteMotor(WritePin &pin) { this->_remote_motor = &pin; }
+
+    inline int GetTurnoutNumber() const { return this->_turnout_number; }
+
+    bool Wire()
+    {
+        Log.notice("Wiring turnout [%d].\n", this->_turnout_number);
+
+        if (this->_panel_switch == nullptr || this->_panel_led == nullptr
+            // || this->_remote_feedback == nullptr || this->_remote_motor == nullptr
+            )
+        {
+            Log.error("Not all I/O configured.\n");
+            return false;
+        }
+
+        // this->_feedback_connector.Wire(*this->_remote_feedback, *this->_panel_led);
+        this->_switch_connector.Wire(*this->_panel_switch, *this->_panel_led);
+
+        return true;
+    }
+
+    void Register(PinUpdater &updater)
+    {
+        updater.Register(this->_switch_connector);
+        // updater.Register(this->_feedback_connector);
+    }
+};
+
 class Layout
 {
 private:
     PinUpdater _updater;
-    std::vector<OneToOnePinConnector> _oneToOneConnectors;
+    std::vector<Turnout> _turnouts;
     LocalPcf8574Reader _reader0x20 = LocalPcf8574Reader(0x20);
     LocalPcf8574Reader _reader0x21 = LocalPcf8574Reader(0x21);
     LocalPcf8574Writer _writer0x22 = LocalPcf8574Writer(0x22);
     LocalPcf8574Writer _writer0x23 = LocalPcf8574Writer(0x23);
 
-    void OneToOneWire(ReadPin& r, WritePin& w)
-    {
-        this->_oneToOneConnectors.push_back(OneToOnePinConnector(r,w));
-    }
+    void CreateTurnouts();
 
     void Wire()
     {
-        this->OneToOneWire(this->_reader0x20.RequestPin(7), this->_writer0x23.RequestPin(2)); // W 1
-        this->OneToOneWire(this->_reader0x20.RequestPin(2), this->_writer0x22.RequestPin(2)); // W 2
-        this->OneToOneWire(this->_reader0x21.RequestPin(2), this->_writer0x23.RequestPin(6)); // W 3
-        this->OneToOneWire(this->_reader0x20.RequestPin(3), this->_writer0x23.RequestPin(5)); // W 4
-        this->OneToOneWire(this->_reader0x20.RequestPin(5), this->_writer0x22.RequestPin(3)); // W 5
-        this->OneToOneWire(this->_reader0x21.RequestPin(6), this->_writer0x22.RequestPin(4)); // W 6
-        this->OneToOneWire(this->_reader0x21.RequestPin(5), this->_writer0x23.RequestPin(3)); // W 7
-        this->OneToOneWire(this->_reader0x21.RequestPin(4), this->_writer0x23.RequestPin(7)); // W 8
-        this->OneToOneWire(this->_reader0x20.RequestPin(6), this->_writer0x22.RequestPin(0)); // W 9
-        this->OneToOneWire(this->_reader0x21.RequestPin(3), this->_writer0x23.RequestPin(4)); // W 10
-        this->OneToOneWire(this->_reader0x21.RequestPin(7), this->_writer0x22.RequestPin(6)); // W 11
-        this->OneToOneWire(this->_reader0x20.RequestPin(4), this->_writer0x22.RequestPin(1)); // W 12
-        // this->OneToOneWire(not there); // W 13
-        this->OneToOneWire(this->_reader0x20.RequestPin(1), this->_writer0x22.RequestPin(7)); // W 14
-        this->OneToOneWire(this->_reader0x20.RequestPin(0), this->_writer0x22.RequestPin(5)); // W 15
+        for (auto &turnout : this->_turnouts)
+        {
+            auto success = turnout.Wire();
+            if (!success)
+            {
+                Log.fatal("Invalid configuration for turnout [%d].\n", turnout.GetTurnoutNumber());
+                while (true)
+                {
+                    delay(1000);
+                }
+            }
+        }
     }
 
     void Register()
     {
-        for (auto &connector : this->_oneToOneConnectors)
+        for (auto &turnout : this->_turnouts)
         {
-            this->_updater.Register(connector);
+            turnout.Register(this->_updater);
         }
 
         this->_updater.Register(this->_reader0x20);
@@ -56,6 +98,7 @@ private:
 public:
     Layout()
     {
+        this->CreateTurnouts();
         this->Wire();
         this->Register();
     }
