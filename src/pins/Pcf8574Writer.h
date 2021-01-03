@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include "Pins.h"
+#include "Pcf8574.h"
 #include "PinUpdater.h"
 #include <array>
 #include <algorithm>
@@ -9,13 +10,13 @@
 #include <bitset>
 #include <Adafruit_I2CDevice.h>
 
-class Pcf8574Writer : public Updater<Operation::Write>
+class Pcf8574Writer : public Pcf8574<WritePin, Operation::Write>
 {
 public:
     static constexpr size_t MAX_PINS = 8;
 
 private:
-    class Pcf8574WritePin : public WritePin
+    class Pcf8574WritePin : public Pcf8574Pin
     {
     public:
         bool GetValue() const
@@ -31,14 +32,24 @@ private:
         {
             return this->_valueChanged;
         }
-
-        void SetName(const std::string& name)
-        {
-            this->_name = name;
-        }
     };
 
     std::array<Pcf8574WritePin, MAX_PINS> _pins;
+
+protected:
+    virtual void DoUpdate(const std::bitset<MAX_PINS> &data) = 0;
+
+    void UpdatePinNames()
+    {
+        this->Pcf8574::UpdatePinNames(this->_pins);
+    }
+
+public:
+    WritePin &RequestPin(size_t pin_number)
+    {
+        assert(pin_number < MAX_PINS);
+        return this->_pins[pin_number];
+    }
 
     void Update() override
     {
@@ -59,27 +70,6 @@ private:
         }
 
         this->DoUpdate(data);
-    }
-
-protected:
-    virtual void DoUpdate(const std::bitset<MAX_PINS> &data) = 0;
-
-    void UpdatePinNames()
-    {
-        auto i = 0;
-        for (auto& pin : this->_pins)
-        {
-            char buffer[2];
-            snprintf(buffer, 2, "%d", i);
-            pin.SetName(this->_name + "_P" + buffer);
-            ++i;
-        }
-    }
-public:
-    WritePin& RequestPin(size_t pin_number)
-    {
-        assert(pin_number < MAX_PINS);
-        return this->_pins[pin_number];
     }
 };
 
