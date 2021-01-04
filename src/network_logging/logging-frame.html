@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+
+  <title>Model Railroad Logs</title>
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+  <main class="flex-shrink-0">
+    <h1>Model Railroad Logs</h1>
+    <table class="table table-striped table-hover" id="log-table">
+        <tr class="table-primary sticky-top">
+          <th scope="col">#</th>
+          <th scope="col">Timestamp</th>
+          <th scope="col">Level</th>
+          <th scope="col">Message</th>
+        </tr>
+    </table>
+  </main>
+  <footer class="footer mt-auto">
+    <div class="d-flex bg-success py-2">
+      <div class="form-check d-inline-flex flex-fill align-self-center mx-3">
+        <input class="form-control form-check-input" type="checkbox" checked="true" id="checkBoxAutoScroll">
+        <label class="form-check-label" for="checkBoxAutoScroll">Auto Scroll to Bottom.</label>
+      </div>
+      <div class="form-group d-inline-flex align-self-center mx-3">
+        <button type="submit" class="btn btn-primary" id="buttonClear">Clear</button>
+      </div>
+      <div class="form-group d-inline-flex align-self-center mx-3">
+        <button type="submit" class="btn btn-primary" id="buttonSaveToFile">Save To File</button>
+      </div>
+    </div>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW"
+    crossorigin="anonymous"></script>
+  <script type="text/javascript">
+    "use strict";
+
+    var lineNumber = 1;
+    var shouldAutoScroll = true;
+
+    function appendToTable(rowNumber, timestamp, message_level, message) {
+      let table = document.getElementById("log-table");
+      let row = table.insertRow();
+      let num = document.createElement("th");
+      row.appendChild(num);
+      let time = row.insertCell();
+      let level = row.insertCell();
+      let msg = row.insertCell();
+      num.innerHTML = rowNumber;
+      time.innerHTML = timestamp;
+      level.innerHTML = message_level;
+      msg.innerHTML = message;
+    }
+
+    function download(data, filename, type) {
+      var file = new Blob([data], { type: type });
+      if (window.navigator.msSaveOrOpenBlob) // IE10+
+        window.navigator.msSaveOrOpenBlob(file, filename);
+      else { // Others
+        var a = document.createElement("a"),
+          url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 0);
+      }
+    }
+
+    function getDataFromTable() {
+      let data = "";
+
+      const table = document.getElementById("log-table");
+      const rowLength = table.rows.length;
+      for (let i = 0; i < rowLength; i++) {
+        const cells = table.rows.item(i).cells;
+        const cellLength = cells.length;
+        for (let j = 0; j < cellLength; j++) {
+          const cellVal = cells.item(j).innerHTML;
+          data += cellVal + ';';
+        }
+        data = data.replace(/;$/, '\n');
+      }
+      return data;
+    }
+
+    function saveToFile() {
+      const now = new Date().toISOString().replaceAll(/[: ]/g, '-').slice(0, 19);
+      const data = getDataFromTable();
+
+      download(data, "log-model-raidroad-panel-" + now + ".csv", "text/csv");
+    }
+
+    function parseData(text) {
+      const lines = text.split('\n');
+      const parsed_lines = lines.filter(x => x !== "").map(x => x.split(/^ *(\d+) ([FEWNTV]): (.*)$/));
+      parsed_lines.forEach(x => appendToTable(lineNumber++, x[1], x[2], x[3]));
+      if (shouldAutoScroll) {
+        window.scrollTo(0, document.body.scrollHeight);
+      }
+    }
+
+    function refreshData() {
+       const theUrl = "update";
+      let xmlHttp = new XMLHttpRequest();
+      xmlHttp.onreadystatechange = function () {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+          parseData(xmlHttp.responseText);
+      }
+      xmlHttp.open("GET", theUrl, true);
+      xmlHttp.send(null);
+
+      setTimeout(refreshData, 80);
+    }
+
+    function init() {
+      let autoScroller = document.getElementById("checkBoxAutoScroll");
+      autoScroller.addEventListener('change', function () { shouldAutoScroll = this.checked; });
+      let fileSelect = document.getElementById("buttonSaveToFile");
+      fileSelect.addEventListener('click', saveToFile);
+      let clearer = document.getElementById("buttonClear");
+      clearer.addEventListener('click', function() {
+        let table = document.getElementById("log-table");
+        for (let i = table.rows.length - 1; i > 0; --i)
+        {
+          table.deleteRow(i);
+        }
+        lineNumber = 1;
+      })
+    }
+
+    init();
+    refreshData();
+  </script>
+</body>
+
+</html>

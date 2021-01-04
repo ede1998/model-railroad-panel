@@ -40,37 +40,37 @@ private:
 public:
     void Register(Updater<Operation::Read> &updater)
     {
-        Log.notice("Adding read updater [%s].\n", updater.CName());
+        Log.notice("Adding read updater [%s].", updater.CName());
         this->_readers.push_back(&updater);
     }
 
     void Register(Updater<Operation::Write> &updater)
     {
-        Log.notice("Adding write updater [%s].\n", updater.CName());
+        Log.notice("Adding write updater [%s].", updater.CName());
         this->_writers.push_back(&updater);
     }
 
     void Register(Updater<Operation::Connect> &updater)
     {
-        Log.notice("Adding connect updater [%s].\n", updater.CName());
+        Log.notice("Adding connect updater [%s].", updater.CName());
         this->_connectors.push_back(&updater);
     }
 
     void Update()
     {
-        Log.notice("Updating readers.\n");
+        Log.notice("Updating readers.");
         for (auto reader : this->_readers)
         {
             reader->Update();
         }
 
-        Log.notice("Updating connectors.\n");
+        Log.notice("Updating connectors.");
         for (auto connector : this->_connectors)
         {
             connector->Update();
         }
 
-        Log.notice("Updating writers.\n");
+        Log.notice("Updating writers.");
         for (auto writer : this->_writers)
         {
             writer->Update();

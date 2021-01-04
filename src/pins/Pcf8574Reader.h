@@ -22,7 +22,7 @@ private:
         {
             if (value != _value)
             {
-                Log.trace("Value of [%s] changed to [%T].\n", this->CName(), value);
+                Log.trace("Value of [%s] changed to [%T].", this->CName(), value);
             }
             this->_value = value;
         }
@@ -66,7 +66,7 @@ protected:
     {
         uint8_t buffer;
         this->_i2c_dev.read(&buffer, sizeof(buffer));
-        Log.verbose("Read [%d] from I2C address [%x].\n", buffer, this->_i2c_dev.address());
+        Log.verbose("Read [%d] from I2C address [%x].", buffer, this->_i2c_dev.address());
         return {buffer};
     }
 
@@ -80,12 +80,12 @@ public:
 
         if (!this->_i2c_dev.begin())
         {
-            Log.fatal("Did not find device at [%x].\n", this->_i2c_dev.address());
+            Log.fatal("Did not find device at [%x].", this->_i2c_dev.address());
             while (true)
             {
                 delay(1000);
             }
         }
-        Log.notice("Device found at address [%x].\n", this->_i2c_dev.address());
+        Log.notice("Device found at address [%x].", this->_i2c_dev.address());
     }
 };

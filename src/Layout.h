@@ -31,13 +31,13 @@ public:
 
     bool Wire()
     {
-        Log.notice("Wiring turnout [%d].\n", this->_turnout_number);
+        Log.notice("Wiring turnout [%d].", this->_turnout_number);
 
         if (this->_panel_switch == nullptr || this->_panel_led == nullptr
             // || this->_remote_feedback == nullptr || this->_remote_motor == nullptr
             )
         {
-            Log.error("Not all I/O configured.\n");
+            Log.error("Not all I/O configured.");
             return false;
         }
 
@@ -73,7 +73,7 @@ private:
             auto success = turnout.Wire();
             if (!success)
             {
-                Log.fatal("Invalid configuration for turnout [%d].\n", turnout.GetTurnoutNumber());
+                Log.fatal("Invalid configuration for turnout [%d].", turnout.GetTurnoutNumber());
                 while (true)
                 {
                     delay(1000);

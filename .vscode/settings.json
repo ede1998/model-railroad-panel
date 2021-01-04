@@ -16,7 +16,14 @@
         "bitset": "cpp",
         "algorithm": "cpp",
         "map": "cpp",
-        "unordered_map": "cpp"
+        "unordered_map": "cpp",
+        "exception": "cpp",
+        "fstream": "cpp",
+        "iosfwd": "cpp",
+        "new": "cpp",
+        "ostream": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp"
     },
     "cmake.configureOnOpen": false
 }

@@ -1,41 +1,39 @@
-/**
- * Blink
- *
- * Turns on an LED on for one second,
- * then off for one second, repeatedly.
- */
-#include "Arduino.h"
-#include <ESP8266WiFi.h> //https://github.com/esp8266/Arduino
-
-//needed for library
-#include <DNSServer.h>
-#include <ESP8266WebServer.h>
-#include <WiFiManager.h> //https://github.com/tzapu/WiFiManager
-#include <string>
+#include <Arduino.h>
+#include <WiFiManager.h>
 #include "pigpio-remote/BasicIo.h"
 #include "pigpio-remote/PiConnection.h"
 #include <ArduinoLog.h>
 #include "Layout.h"
+#include "network_logging/NetworkLogger.h"
 
+Layout *layout;
+NetworkLogger logger;
 
-Layout* layout;
-
-void printTimestamp(Print* _logOutput) {
+void printTimestamp(Print *_logOutput)
+{
   char c[12];
   sprintf(c, "%10lu ", millis());
   _logOutput->print(c);
+}
+
+void printNewline(Print* _logOutput) {
+  _logOutput->print('\n');
 }
 
 void setup()
 {
   Serial.begin(115200);
 
-  Log.begin(LOG_LEVEL_TRACE, &Serial);
-  Log.setPrefix(printTimestamp);
-
   WiFiManager wifiManager;
   wifiManager.autoConnect("AutoConnectAP");
-  Log.notice("connected...yeey :).\n");
+
+  logger.Start(80);
+
+  Log.begin(LOG_LEVEL_TRACE, &logger);
+  Log.setPrefix(printTimestamp);
+  Log.setSuffix(printNewline);
+
+  Log.notice("connected...yeey :).");
 
   layout = new Layout();
 }
@@ -43,5 +41,5 @@ void setup()
 void loop()
 {
   layout->Run();
-  delay(2000);
+  logger.Idle(2000);
 }

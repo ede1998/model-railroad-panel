@@ -23,7 +23,7 @@ private:
         {
             if (this->_valueChanged)
             {
-                Log.trace("Write value for [%s] changed to [%T].\n", this->CName(), this->_value);
+                Log.trace("Write value for [%s] changed to [%T].", this->CName(), this->_value);
             }
             return this->_value;
         }
@@ -57,11 +57,11 @@ public:
 
         if (noValueChanged)
         {
-            Log.trace("No value for the writer changed. Not updating any pins.\n");
+            Log.trace("No value for the writer changed. Not updating any pins.");
             return;
         }
 
-        Log.trace("At least one value for the writer changed. Updating all pins.\n");
+        Log.trace("At least one value for the writer changed. Updating all pins.");
         std::bitset<MAX_PINS> data;
         for (size_t i = 0; i < MAX_PINS; ++i)
         {
@@ -83,7 +83,7 @@ protected:
     {
         uint8_t buffer = data.to_ulong();
         this->_i2c_dev.write(&buffer, sizeof(buffer));
-        Log.verbose("Wrote [%d] to address [%x].\n", buffer, this->_i2c_dev.address());
+        Log.verbose("Wrote [%d] to address [%x].", buffer, this->_i2c_dev.address());
     }
 
 public:
@@ -96,12 +96,12 @@ public:
 
         if (!this->_i2c_dev.begin())
         {
-            Log.fatal("Did not find device at [%x].\n", this->_i2c_dev.address());
+            Log.fatal("Did not find device at [%x].", this->_i2c_dev.address());
             while (true)
             {
                 delay(1000);
             }
         }
-        Log.notice("Device found at address [%x].\n", this->_i2c_dev.address());
+        Log.notice("Device found at address [%x].", this->_i2c_dev.address());
     }
 };
