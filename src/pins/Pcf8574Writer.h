@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <bitset>
 #include <Adafruit_I2CDevice.h>
+#include "pigpio-remote/I2cDevice.h"
 
 class Pcf8574Writer : public Pcf8574<WritePin, Operation::Write>
 {
@@ -103,5 +104,55 @@ public:
             }
         }
         Log.notice("Device found at address [%x].", this->_i2c_dev.address());
+    }
+};
+
+class PigpioPcf8574Writer : public Pcf8574Writer
+{
+private:
+    pigpio_remote::I2cDevice _i2c_dev;
+
+protected:
+    void DoUpdate(const std::bitset<MAX_PINS> &data) override
+    {
+        uint8_t buffer = data.to_ulong();
+        auto result = this->_i2c_dev.WriteByte(buffer);
+        if (result == pigpio_remote::PigpioError::PI_OK)
+        {
+            Log.verbose("Wrote [%d] to address [%x].", buffer, this->_i2c_dev.GetAddress());
+        }
+        else
+        {
+            Log.error("Sending data returned error code [%d].", result);
+        }
+    }
+
+public:
+    PigpioPcf8574Writer(pigpio_remote::PiConnection &connection, uint8_t address) : _i2c_dev(connection)
+    {
+        char buffer[5];
+        snprintf(buffer, 5, "%x", address);
+        this->_name = "PigpioPcf8574Writer" + std::string(buffer);
+        this->UpdatePinNames();
+        
+        auto result = this->_i2c_dev.Open(address);
+
+        if (result != pigpio_remote::PigpioError::PI_OK)
+        {
+            switch (static_cast<pigpio_remote::PigpioError>(result))
+            {
+            case pigpio_remote::PigpioError::PI_BAD_I2C_ADDR:
+                Log.fatal("Did not find device at [%x].", this->_i2c_dev.GetAddress());
+                break;
+            default:
+                Log.fatal("Error [%d] occured while trying to open I2C connection.", result);
+                break;
+            }
+            while (true)
+            {
+                delay(1000);
+            }
+        }
+        Log.notice("Device found at address [%x].", this->_i2c_dev.GetAddress());
     }
 };

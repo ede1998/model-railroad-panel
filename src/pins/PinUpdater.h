@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Component.h"
 #include <ArduinoLog.h>
 
 enum class Operation
@@ -10,24 +11,11 @@ enum class Operation
 };
 
 template <Operation updater>
-class Updater
+class Updater : public virtual Component
 {
-protected:
-    std::string _name;
-
 public:
     virtual ~Updater() = default;
     virtual void Update() = 0;
-    
-    const std::string& Name() const
-    {
-        return this->_name;
-    }
-
-    const char* CName() const
-    {
-        return this->_name.c_str();
-    }
 };
 
 class PinUpdater

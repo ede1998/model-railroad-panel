@@ -1,68 +1,27 @@
 #pragma once
 
+#include "pigpio-remote/PiConnection.h"
 #include "pins/Pcf8574Reader.h"
 #include "pins/Pcf8574Writer.h"
 #include "pins/PinUpdater.h"
-#include "pins/PinConnector.h"
+#include "pins/PigpioPins.h"
 #include <vector>
-
-class Turnout
-{
-private:
-    ReadPin *_panel_switch;
-    ReadPin *_remote_feedback;
-    WritePin *_panel_led;
-    WritePin *_remote_motor;
-
-    // OneToOnePinConnector _feedback_connector;
-    OneToOnePinConnector _switch_connector;
-
-    int _turnout_number;
-
-public:
-    Turnout(int number) : _turnout_number(number) {}
-
-    inline void SetPanelSwitch(ReadPin &pin) { this->_panel_switch = &pin; }
-    inline void SetPanelLed(WritePin &pin) { this->_panel_led = &pin; }
-    inline void SetRemoteFeedback(ReadPin &pin) { this->_remote_feedback = &pin; }
-    inline void SetRemoteMotor(WritePin &pin) { this->_remote_motor = &pin; }
-
-    inline int GetTurnoutNumber() const { return this->_turnout_number; }
-
-    bool Wire()
-    {
-        Log.notice("Wiring turnout [%d].", this->_turnout_number);
-
-        if (this->_panel_switch == nullptr || this->_panel_led == nullptr
-            // || this->_remote_feedback == nullptr || this->_remote_motor == nullptr
-            )
-        {
-            Log.error("Not all I/O configured.");
-            return false;
-        }
-
-        // this->_feedback_connector.Wire(*this->_remote_feedback, *this->_panel_led);
-        this->_switch_connector.Wire(*this->_panel_switch, *this->_panel_led);
-
-        return true;
-    }
-
-    void Register(PinUpdater &updater)
-    {
-        updater.Register(this->_switch_connector);
-        // updater.Register(this->_feedback_connector);
-    }
-};
+#include "Turnout.h"
 
 class Layout
 {
 private:
     PinUpdater _updater;
     std::vector<Turnout> _turnouts;
+
     LocalPcf8574Reader _reader0x20 = LocalPcf8574Reader(0x20);
     LocalPcf8574Reader _reader0x21 = LocalPcf8574Reader(0x21);
     LocalPcf8574Writer _writer0x22 = LocalPcf8574Writer(0x22);
     LocalPcf8574Writer _writer0x23 = LocalPcf8574Writer(0x23);
+
+    PigpioPcf8574Writer _writer_remote0x20;
+    PigpioPinSet<PigpioReadPin> _remote_read_pins;
+    PigpioPinSet<PigpioWritePin> _remote_write_pins;
 
     void CreateTurnouts();
 
@@ -93,11 +52,20 @@ private:
         this->_updater.Register(this->_reader0x21);
         this->_updater.Register(this->_writer0x22);
         this->_updater.Register(this->_writer0x23);
+
+        this->_updater.Register(this->_writer_remote0x20);
+        this->_remote_read_pins.Register(this->_updater);
+        this->_remote_write_pins.Register(this->_updater);
     }
 
 public:
-    Layout()
+    Layout(pigpio_remote::PiConnection &connection)
+        : _writer_remote0x20(connection, 0x20),
+          _remote_read_pins(connection),
+          _remote_write_pins(connection)
     {
+        this->_remote_read_pins.Add({4, 10, 12, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 27});
+        this->_remote_write_pins.Add({5, 6, 8, 9, 11, 13, 19, 26});
         this->CreateTurnouts();
         this->Wire();
         this->Register();

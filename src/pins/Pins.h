@@ -1,25 +1,8 @@
 #pragma once
 
-#include <string>
+#include "Component.h"
 
-class NamedPin
-{
-protected:
-    std::string _name;
-
-public:
-    const std::string &Name() const
-    {
-        return this->_name;
-    }
-
-    const char *CName() const
-    {
-        return this->_name.c_str();
-    }
-};
-
-class ReadPin : public NamedPin
+class ReadPin : public virtual Component
 {
 protected:
     bool _value = false;
@@ -31,7 +14,7 @@ public:
     }
 };
 
-class WritePin : public NamedPin
+class WritePin : public virtual Component
 {
 protected:
     bool _value = false;

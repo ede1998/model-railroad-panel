@@ -8,6 +8,7 @@
 
 Layout *layout;
 NetworkLogger logger;
+pigpio_remote::PiConnection pigpio_connection;
 
 void printTimestamp(Print *_logOutput)
 {
@@ -29,13 +30,23 @@ void setup()
 
   logger.Start(80);
 
-  Log.begin(LOG_LEVEL_TRACE, &logger);
+  Log.begin(LOG_LEVEL_NOTICE, &logger);
   Log.setPrefix(printTimestamp);
   Log.setSuffix(printNewline);
 
   Log.notice("connected...yeey :).");
 
-  layout = new Layout();
+  auto result = pigpio_connection.Connect("modellbahn");
+  if (result != pigpio_remote::ConnectionError::SUCCESS)
+  {
+    Log.fatal("Could not connect to pigpio remote. Error code = [%d].", result);
+    while (true)
+    {
+      delay(10);
+    }
+  }
+
+  layout = new Layout(pigpio_connection);
 }
 
 void loop()
