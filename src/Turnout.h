@@ -11,11 +11,15 @@ private:
     WritePin *_panel_led;
     WritePin *_remote_motor;
 
+    bool _negate_feedback = false;
+    bool _negate_switch = false;
+
     OneToOnePinConnector _feedback_connector;
     OneToOnePinConnector _switch_connector;
 
     int _turnout_number;
 
+    static ChangeObserverConnector _turnout_master;
 public:
     Turnout(int number) : _turnout_number(number) {}
 
@@ -23,6 +27,9 @@ public:
     inline void SetPanelLed(WritePin &pin) { this->_panel_led = &pin; }
     inline void SetRemoteFeedback(ReadPin &pin) { this->_remote_feedback = &pin; }
     inline void SetRemoteMotor(WritePin &pin) { this->_remote_motor = &pin; }
+
+    inline void NegateFeedback(bool negate) { this->_negate_feedback = negate; }
+    inline void NegateSwitch(bool negate) { this->_negate_switch = negate; }
 
     inline int GetTurnoutNumber() const { return this->_turnout_number; }
 
@@ -38,8 +45,9 @@ public:
             return false;
         }
 
-        this->_feedback_connector.Wire(*this->_remote_feedback, *this->_panel_led);
-        this->_switch_connector.Wire(*this->_panel_switch, *this->_remote_motor);
+        this->_feedback_connector.Wire(*this->_remote_feedback, *this->_panel_led, this->_negate_feedback);
+        this->_switch_connector.Wire(*this->_panel_switch, *this->_remote_motor, this->_negate_switch);
+        Turnout::_turnout_master.AddReadPin(*this->_panel_switch);
 
         return true;
     }
@@ -48,5 +56,15 @@ public:
     {
         updater.Register(this->_switch_connector);
         updater.Register(this->_feedback_connector);
+    }
+
+    static void SetTurnoutMasterWritePin(WritePin &pin)
+    {
+        Turnout::_turnout_master.SetWritePin(pin);
+    }
+
+    static void RegisterTurnoutMaster(PinUpdater &updater)
+    {
+        updater.Register(Turnout::_turnout_master);
     }
 };

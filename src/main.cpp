@@ -36,15 +36,15 @@ void setup()
 
   Log.notice("connected...yeey :).");
 
-  auto result = pigpio_connection.Connect("modellbahn");
-  if (result != pigpio_remote::ConnectionError::SUCCESS)
+  do
   {
-    Log.fatal("Could not connect to pigpio remote. Error code = [%d].", result);
-    while (true)
+    auto result = pigpio_connection.Connect("modellbahn");
+    if (result != pigpio_remote::ConnectionError::SUCCESS)
     {
-      delay(10);
+      Log.fatal("Could not connect to pigpio remote. Retrying later. Error code = [%d].", result);
+      delay(1000);
     }
-  }
+  } while (!pigpio_connection.Connected());
 
   layout = new Layout(pigpio_connection);
 }

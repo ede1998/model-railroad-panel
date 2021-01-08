@@ -43,6 +43,7 @@ private:
 
     void Register()
     {
+        Turnout::RegisterTurnoutMaster(this->_updater);
         for (auto &turnout : this->_turnouts)
         {
             turnout.Register(this->_updater);
@@ -66,6 +67,7 @@ public:
     {
         this->_remote_read_pins.Add({4, 10, 12, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 27});
         this->_remote_write_pins.Add({5, 6, 8, 9, 11, 13, 19, 26});
+        Turnout::SetTurnoutMasterWritePin(this->_remote_write_pins[26]);
         this->CreateTurnouts();
         this->Wire();
         this->Register();
